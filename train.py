@@ -6,6 +6,8 @@ from torchvision import datasets, models, transforms
 from tqdm import tqdm
 import torch
 TRAIN_TEST_IMAGES_DIR = "./dataset"
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Transformations for the image data
 data_transforms = transforms.Compose([
@@ -27,12 +29,15 @@ dataloaders = {
     'test': torch.utils.data.DataLoader(image_datasets['test'], batch_size=4, shuffle=True)
 }
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Define the model
 model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
 
 # Modify the last fully connected layer to match the number of font classes you have
 num_classes = len(image_datasets['train'].classes)
 model.fc = nn.Linear(model.fc.in_features, num_classes)
+model = model.to(device)
 
 # Define the loss function
 criterion = torch.nn.CrossEntropyLoss()
@@ -47,6 +52,7 @@ def train_step(model, data_loader, criterion, optimizer):
     total_loss = 0
     progress_bar = tqdm(data_loader, desc='Training', leave=True)
     for inputs, targets in progress_bar:
+        inputs, targets = inputs.to(device), targets.to(device)
         outputs = model(inputs)
         loss = criterion(outputs, targets)
         optimizer.zero_grad()
@@ -65,6 +71,7 @@ def validate(model, data_loader, criterion):
     progress_bar = tqdm(data_loader, desc='Validation', leave=False)
     with torch.no_grad():
         for inputs, targets in progress_bar:
+            inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, targets)
             total_loss += loss.item()
