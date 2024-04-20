@@ -1,3 +1,4 @@
 dataset/*
 *.pth
 test*
+*.DS_Store
