@@ -4,6 +4,7 @@ import torch.nn as nn
 from torchvision import models, transforms
 import matplotlib.pyplot as plt
 from PIL import Image
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 test_dir = './dataset/test'
 
@@ -15,7 +16,8 @@ test_classes.sort()
 model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
 num_classes = len(test_classes)
 model.fc = nn.Linear(model.fc.in_features, num_classes)
-model.load_state_dict(torch.load('font_identifier_model.pth'))
+model = model.to(device)
+model.load_state_dict(torch.load('findfont-tained.pth', map_location=device))
 
 # Define the transformations for the input image
 data_transforms = transforms.Compose([
@@ -25,24 +27,22 @@ data_transforms = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # Normalize with ImageNet stats
 ])
 
-image_path = 'test.png'
+while True:
+    print("Image: ", end="")
+    image_path = input()
 
-# Load the image and apply the transformations
-image = Image.open(image_path)
-image_tensor = data_transforms(image).unsqueeze(0)
+    # Load the image and apply the transformations
+    image = Image.open(image_path)
+    image_tensor = data_transforms(image).unsqueeze(0)
 
-# Classify the image using the trained model
-model.eval()
-with torch.no_grad():
-    output = model(image_tensor)
-    x, predicted = torch.topk(output,3)
-    predicted = predicted[0]
-    x = x[0]
+    # Classify the image using the trained model
+    model.eval()
+    with torch.no_grad():
+        output = model(image_tensor)
+        x, predicted = torch.topk(output,3)
+        predicted = predicted[0]
+        x = x[0]
 
-for i in range(len(predicted)):
-    print(test_classes[predicted[i]], ':', x[i])
-
-# print(f'Predicted class: {test_classes[predicted.item()]}')
-# 0 OV
-# 1 rg
-# 2 z8
+    for i in range(len(predicted)):
+        print(test_classes[predicted[i]], ':', x[i])
+    print()

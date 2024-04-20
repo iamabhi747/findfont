@@ -6,7 +6,7 @@ from pathlib import Path
 app = Flask(__name__)
 CORS(app)
 
-out_dir = 'dataset/train'
+out_dir = 'dataset/test'
 
 def data_uri_to_png(data_uri, filename):
     response = urllib.request.urlopen(data_uri)
@@ -20,5 +20,5 @@ def datauri():
     data_uri_to_png(data['data_uri'], out_dir + '/' + data['fontid'] + '/' +  sha256(data['text'].encode()).hexdigest()[:8]+'.png')
     return jsonify({'status': 'ok'})
 
-# if __name__ == '__main__':
-#     app.run(port=5000)
+if __name__ == '__main__':
+    app.run(port=5000)
